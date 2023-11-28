@@ -14,6 +14,12 @@ impl App {
         Ok(Self { ui: Ui::new()? })
     }
 
+    pub fn from(path: &str) -> Result<Self, Box<dyn error::Error>> {
+        Ok(Self {
+            ui: Ui::from(path)?,
+        })
+    }
+
     pub fn run(&mut self) -> Result<(), Box<dyn error::Error>> {
         self.ui.clear();
         self.ui.display(

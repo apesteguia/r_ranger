@@ -30,6 +30,18 @@ impl Ui {
         })
     }
 
+    pub fn from(path: &str) -> Result<Self, Box<dyn error::Error>> {
+        io::stdout().execute(crossterm::terminal::EnterAlternateScreen)?;
+        crossterm::terminal::enable_raw_mode()?;
+        Ok(Self {
+            dir: Dir::from(Path::new(path))?,
+            length: 0,
+            idx: 0,
+            horizontal: 0,
+            terminal: Terminal::new(CrosstermBackend::new(io::stderr()))?,
+        })
+    }
+
     pub fn clear(&mut self) {
         self.terminal.clear().unwrap();
     }
@@ -59,7 +71,7 @@ impl Ui {
                     list.block(
                         Block::default()
                             .add_modifier(Modifier::BOLD)
-                            .fg(Color::Magenta)
+                            .fg(Color::Cyan)
                             .title(path)
                             .borders(Borders::ALL),
                     ),
