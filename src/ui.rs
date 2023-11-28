@@ -12,7 +12,7 @@ use std::{error, io, path::Path};
 pub struct Ui {
     pub dir: Dir,
     pub length: u32,
-    pub idx: u32,
+    pub idx: i32,
     pub horizontal: i32,
     pub terminal: Terminal<CrosstermBackend<io::Stderr>>,
 }

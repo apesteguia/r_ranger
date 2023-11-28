@@ -68,6 +68,10 @@ impl Dir {
         }
     }
 
+    pub fn father_path(&mut self) {
+        self.last_dir_path = self.last_dir_path.parent().unwrap().to_path_buf();
+    }
+
     pub fn order_alphabetically(&mut self) {
         self.files
             .sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
