@@ -1,5 +1,8 @@
-use std::io;
+pub mod app;
 pub mod fs;
-fn main() -> Result<(), io::Error> {
-    Ok(())
+pub mod ui;
+
+fn main() {
+    let mut app = app::App::new().unwrap();
+    app.run().unwrap();
 }
