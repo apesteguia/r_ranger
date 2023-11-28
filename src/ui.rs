@@ -4,7 +4,7 @@ use ratatui::{
     prelude::*,
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState},
+    widgets::{Block, Borders, List, ListItem},
 };
 use std::{error, io, path::Path};
 
@@ -54,6 +54,10 @@ impl Ui {
         self.terminal.clear().unwrap();
     }
 
+    // ...
+
+    // ...
+
     pub fn display(&mut self, path: &str) {
         self.dir.order_alphabetically();
         let mut list_items = Vec::<ListItem>::new();
@@ -62,7 +66,10 @@ impl Ui {
             .files
             .iter()
             .enumerate()
-            .filter(|(i, _f)| i32::try_from(*i).unwrap() >= self.idx)
+            .filter(|(i, _f)| {
+                i32::try_from(*i).unwrap() >= self.idx
+                    && i32::try_from(*i).unwrap() < self.size.height as i32
+            })
             .for_each(|(i, f)| {
                 let (item_text, text_color, background_color) = if f.is_dir {
                     (
@@ -124,8 +131,6 @@ impl Ui {
             });
         })
     } */
-
-    pub fn display_title(&self) {}
 
     pub fn finish(&self) -> Result<(), Box<dyn error::Error>> {
         crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen)?;
