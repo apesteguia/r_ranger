@@ -1,8 +1,8 @@
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind};
 
 use crate::ui::Ui;
 
-use std::{error, io};
+use std::error;
 
 #[derive(Debug)]
 pub struct App {

@@ -4,7 +4,7 @@ use ratatui::{
     prelude::*,
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem},
 };
 use std::{error, io, path::Path};
 
