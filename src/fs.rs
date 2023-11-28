@@ -75,7 +75,9 @@ impl Dir {
     }
 
     pub fn father_path(&mut self) {
-        self.last_dir_path = self.last_dir_path.parent().unwrap().to_path_buf();
+        if let Some(parent_path) = self.last_dir_path.parent() {
+            self.last_dir_path = parent_path.to_path_buf();
+        }
     }
 
     pub fn order_alphabetically(&mut self) {
