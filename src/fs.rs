@@ -1,4 +1,7 @@
+use chrono::{DateTime, Local};
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 use std::{env, error, fs, io};
 
 #[derive(Debug, Clone)]
@@ -13,6 +16,8 @@ pub struct FileInfo {
     pub is_dir: bool,
     pub name: String,
     pub size: u64,
+    pub permissions: String,
+    pub last_modified: String,
 }
 
 impl Dir {
@@ -40,8 +45,15 @@ impl Dir {
                     .map(|f| {
                         let is_dir = f.file_type()?.is_dir();
                         let size = if is_dir { 0 } else { f.metadata()?.len() };
+                        let datetime: DateTime<Local> = f.metadata()?.modified()?.into();
 
-                        FileInfo::new(is_dir, f.file_name().to_str().unwrap().to_string(), size)
+                        FileInfo::new(
+                            is_dir,
+                            f.file_name().to_str().unwrap().to_string(),
+                            size,
+                            datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
+                            format_permissions(f.metadata()?.permissions(), is_dir),
+                        )
                     })
                     .collect();
 
@@ -68,9 +80,53 @@ impl Dir {
 }
 
 impl FileInfo {
-    fn new(is_dir: bool, name: String, size: u64) -> Result<Self, io::Error> {
-        Ok(FileInfo { is_dir, name, size })
+    pub fn new(
+        is_dir: bool,
+        name: String,
+        size: u64,
+        last_modified: String,
+        permissions: String,
+    ) -> Result<Self, io::Error> {
+        Ok(FileInfo {
+            is_dir,
+            name,
+            size,
+            permissions,
+            last_modified,
+        })
     }
+}
+
+fn format_permissions(permissions: fs::Permissions, is_directory: bool) -> String {
+    let mode = permissions.mode();
+
+    let file_type_char = if is_directory { 'd' } else { '-' };
+
+    let owner_read = if mode & 0o400 != 0 { 'r' } else { '-' };
+    let owner_write = if mode & 0o200 != 0 { 'w' } else { '-' };
+    let owner_execute = if mode & 0o100 != 0 { 'x' } else { '-' };
+
+    let group_read = if mode & 0o040 != 0 { 'r' } else { '-' };
+    let group_write = if mode & 0o020 != 0 { 'w' } else { '-' };
+    let group_execute = if mode & 0o010 != 0 { 'x' } else { '-' };
+
+    let other_read = if mode & 0o004 != 0 { 'r' } else { '-' };
+    let other_write = if mode & 0o002 != 0 { 'w' } else { '-' };
+    let other_execute = if mode & 0o001 != 0 { 'x' } else { '-' };
+
+    format!(
+        "{}{}{}{}{}{}{}{}{}{}",
+        file_type_char,
+        owner_read,
+        owner_write,
+        owner_execute,
+        group_read,
+        group_write,
+        group_execute,
+        other_read,
+        other_write,
+        other_execute
+    )
 }
 
 pub fn return_dir_vec(path: &Path) -> Result<Vec<FileInfo>, Box<dyn error::Error>> {
@@ -79,10 +135,13 @@ pub fn return_dir_vec(path: &Path) -> Result<Vec<FileInfo>, Box<dyn error::Error
             let files_info: Result<Vec<_>, _> = dirs
                 .filter_map(|f| f.ok())
                 .map(|f| {
+                    let datetime: DateTime<Local> = f.metadata()?.modified()?.into();
                     FileInfo::new(
                         f.file_type()?.is_dir(),
                         f.file_name().to_str().unwrap().to_string(),
                         f.metadata()?.len(),
+                        datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
+                        format_permissions(f.metadata()?.permissions(), f.file_type()?.is_dir()),
                     )
                 })
                 .collect();

@@ -1,7 +1,7 @@
 use crate::fs::Dir;
 use crossterm::ExecutableCommand;
 use ratatui::{
-    prelude::{CrosstermBackend, Terminal},
+    prelude::*,
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
@@ -21,8 +21,11 @@ impl Ui {
     pub fn new() -> Result<Self, Box<dyn error::Error>> {
         io::stdout().execute(crossterm::terminal::EnterAlternateScreen)?;
         crossterm::terminal::enable_raw_mode()?;
+        let binding = std::env::current_dir()?;
+        let current = binding.as_path();
+        let dir = Dir::from(current)?;
         Ok(Self {
-            dir: Dir::from(Path::new("/home/mikel/Escritorio/"))?,
+            dir,
             length: 0,
             idx: 0,
             horizontal: 0,
@@ -52,9 +55,18 @@ impl Ui {
 
         self.dir.files.iter().for_each(|f| {
             let (item_text, text_color) = if f.is_dir {
-                (format!("[folder] {} ", f.name), Color::Blue)
+                (
+                    format!("{} {} {}", f.permissions, f.name, f.last_modified),
+                    Color::Blue,
+                )
             } else {
-                (format!("[file] {} {} bytes", f.name, f.size), Color::Green)
+                (
+                    format!(
+                        "{} {} {}bytes {}",
+                        f.permissions, f.name, f.size, f.last_modified
+                    ),
+                    Color::Green,
+                )
             };
 
             list_items.push(ListItem::new(Line::from(Span::styled(
