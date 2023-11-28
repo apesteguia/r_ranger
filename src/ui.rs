@@ -4,7 +4,7 @@ use ratatui::{
     prelude::*,
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem},
+    widgets::{Block, Borders, List, ListItem, ListState},
 };
 use std::{error, io, path::Path};
 
@@ -53,11 +53,16 @@ impl Ui {
         self.dir.order_alphabetically();
         let mut list_items = Vec::<ListItem>::new();
 
-        self.dir.files.iter().for_each(|f| {
-            let (item_text, text_color) = if f.is_dir {
+        self.dir.files.iter().enumerate().for_each(|(i, f)| {
+            let (item_text, text_color, background_color) = if f.is_dir {
                 (
                     format!("{} {} {}", f.permissions, f.name, f.last_modified),
                     Color::Blue,
+                    if self.idx == i.try_into().unwrap() {
+                        Color::White
+                    } else {
+                        Color::Reset
+                    },
                 )
             } else {
                 (
@@ -66,12 +71,20 @@ impl Ui {
                         f.permissions, f.name, f.size, f.last_modified
                     ),
                     Color::Green,
+                    if self.idx == i.try_into().unwrap() {
+                        Color::White
+                    } else {
+                        Color::Reset
+                    },
                 )
             };
 
             list_items.push(ListItem::new(Line::from(Span::styled(
                 item_text,
-                Style::default().add_modifier(Modifier::BOLD).fg(text_color),
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .fg(text_color)
+                    .bg(background_color), // Set background color here
             ))));
         });
 
