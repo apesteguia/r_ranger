@@ -2,9 +2,9 @@ use crate::fs::Dir;
 use crossterm::ExecutableCommand;
 use ratatui::{
     prelude::{CrosstermBackend, Terminal},
-    style::{Color, Modifier, Style},
+    style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 use std::{error, io, path::Path};
 
@@ -34,7 +34,7 @@ impl Ui {
         self.terminal.clear().unwrap();
     }
 
-    pub fn display(&mut self) {
+    pub fn display(&mut self, path: &str) {
         self.dir.order_alphabetically();
         let mut list_items = Vec::<ListItem>::new();
 
@@ -54,7 +54,18 @@ impl Ui {
         let list = List::new(list_items);
 
         self.terminal
-            .draw(|f| f.render_widget(list, f.size()))
+            .draw(|f| {
+                f.render_widget(
+                    list.block(
+                        Block::default()
+                            .add_modifier(Modifier::BOLD)
+                            .fg(Color::Magenta)
+                            .title(path)
+                            .borders(Borders::ALL),
+                    ),
+                    f.size(),
+                )
+            })
             .unwrap();
     }
 

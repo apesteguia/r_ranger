@@ -16,7 +16,14 @@ impl App {
 
     pub fn run(&mut self) -> Result<(), Box<dyn error::Error>> {
         self.ui.clear();
-        self.ui.display(); // Initial display
+        self.ui.display(
+            self.ui
+                .dir
+                .current_path
+                .clone()
+                .to_str()
+                .unwrap_or_default(),
+        );
 
         loop {
             if poll(std::time::Duration::from_millis(16))? {
