@@ -2,7 +2,7 @@ use crate::fs::Dir;
 use crossterm::ExecutableCommand;
 use ratatui::{
     prelude::{CrosstermBackend, Terminal},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, List, ListItem, Paragraph},
 };
@@ -22,7 +22,7 @@ impl Ui {
         io::stdout().execute(crossterm::terminal::EnterAlternateScreen)?;
         crossterm::terminal::enable_raw_mode()?;
         Ok(Self {
-            dir: Dir::from(Path::new("/home/mikel/Escritorio"))?,
+            dir: Dir::from(Path::new("/home/mikel/Escritorio/"))?,
             length: 0,
             idx: 0,
             horizontal: 0,
@@ -35,13 +35,20 @@ impl Ui {
     }
 
     pub fn display(&mut self) {
+        self.dir.order_alphabetically();
         let mut list_items = Vec::<ListItem>::new();
 
         self.dir.files.iter().for_each(|f| {
+            let (item_text, text_color) = if f.is_dir {
+                (format!("[folder] {} ", f.name), Color::Blue)
+            } else {
+                (format!("[file] {} {} bytes", f.name, f.size), Color::Green)
+            };
+
             list_items.push(ListItem::new(Line::from(Span::styled(
-                format!("{}", f.name),
-                Style::default().fg(Color::Blue),
-            ))))
+                item_text,
+                Style::default().add_modifier(Modifier::BOLD).fg(text_color),
+            ))));
         });
 
         let list = List::new(list_items);
@@ -59,6 +66,8 @@ impl Ui {
             });
         })
     } */
+
+    pub fn display_title(&self) {}
 
     pub fn finish(&self) -> Result<(), Box<dyn error::Error>> {
         crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen)?;

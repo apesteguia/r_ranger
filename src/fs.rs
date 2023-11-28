@@ -8,7 +8,7 @@ pub struct Dir {
     pub current_path: PathBuf,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FileInfo {
     pub is_dir: bool,
     pub name: String,
@@ -38,11 +38,10 @@ impl Dir {
                 let files_info: Result<Vec<_>, _> = dirs
                     .filter_map(|f| f.ok())
                     .map(|f| {
-                        FileInfo::new(
-                            f.file_type()?.is_dir(),
-                            f.file_name().to_str().unwrap().to_string(),
-                            f.metadata()?.len(),
-                        )
+                        let is_dir = f.file_type()?.is_dir();
+                        let size = if is_dir { 0 } else { f.metadata()?.len() };
+
+                        FileInfo::new(is_dir, f.file_name().to_str().unwrap().to_string(), size)
                     })
                     .collect();
 
@@ -56,6 +55,11 @@ impl Dir {
             }
             Err(e) => eprintln!("Error reading dir: {}", e),
         }
+    }
+
+    pub fn order_alphabetically(&mut self) {
+        self.files
+            .sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     }
 
     pub fn go_back(&mut self) {
