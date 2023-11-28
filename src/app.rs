@@ -38,7 +38,7 @@ impl App {
                         break;
                     } else if key.kind == KeyEventKind::Press
                         && key.code == KeyCode::Char('j')
-                        && self.ui.idx < self.ui.dir.files.len().try_into().unwrap()
+                        && self.ui.idx + 1 < self.ui.dir.files.len().try_into().unwrap()
                     {
                         self.ui.idx += 1;
                         self.ui.display(
@@ -72,10 +72,11 @@ impl App {
                             .find(|(i, f)| f.is_dir && *i == self.ui.idx.try_into().unwrap())
                         {
                             self.ui.idx = 0;
-                            let selected_dir_name = &selected_dir.name;
-                            let path = self.ui.dir.current_path.join(selected_dir_name);
-                            self.ui.dir.get_dir(&path);
-                            self.ui.dir.current_path = path;
+                            let selected_dir_path = selected_dir.path.clone();
+                            if selected_dir_path.exists() {
+                                self.ui.dir.get_dir(&selected_dir_path.clone());
+                                self.ui.dir.current_path = selected_dir_path.clone();
+                            }
                         }
                         self.ui.display(
                             self.ui

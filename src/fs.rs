@@ -13,6 +13,7 @@ pub struct Dir {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FileInfo {
     pub is_dir: bool,
+    pub path: PathBuf,
     pub name: String,
     pub size: u64,
     pub permissions: String,
@@ -23,7 +24,7 @@ impl Dir {
     pub fn new() -> Result<Self, io::Error> {
         Ok(Dir {
             files: return_dir_vec(&env::current_dir()?).expect("Error creating new Dir"),
-            last_dir_path: PathBuf::new(),
+            last_dir_path: PathBuf::from(env::current_dir().unwrap().parent().unwrap()),
             current_path: env::current_dir()?,
         })
     }
@@ -31,12 +32,15 @@ impl Dir {
     pub fn from(path: &Path) -> Result<Self, io::Error> {
         Ok(Dir {
             files: return_dir_vec(path).expect("Error creating new Dir"),
-            last_dir_path: PathBuf::new(),
+            last_dir_path: PathBuf::from(env::current_dir().unwrap().parent().unwrap()),
             current_path: env::current_dir()?,
         })
     }
 
     pub fn get_dir(&mut self, path: &Path) {
+        if !path.exists() && !path.is_dir() {
+            return;
+        }
         match fs::read_dir(path) {
             Ok(dirs) => {
                 let files_info: Result<Vec<_>, _> = dirs
@@ -45,10 +49,12 @@ impl Dir {
                         let is_dir = f.file_type()?.is_dir();
                         let size = if is_dir { 0 } else { f.metadata()?.len() };
                         let datetime: DateTime<Local> = f.metadata()?.modified()?.into();
+                        let path = PathBuf::from(path);
 
                         FileInfo::new(
                             is_dir,
                             f.file_name().to_str().unwrap().to_string(),
+                            path.join(f.file_name()),
                             size,
                             datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
                             format_permissions(f.metadata()?.permissions(), is_dir),
@@ -86,6 +92,7 @@ impl FileInfo {
     pub fn new(
         is_dir: bool,
         name: String,
+        path: PathBuf,
         size: u64,
         last_modified: String,
         permissions: String,
@@ -93,6 +100,7 @@ impl FileInfo {
         Ok(FileInfo {
             is_dir,
             name,
+            path,
             size,
             permissions,
             last_modified,
@@ -139,9 +147,11 @@ pub fn return_dir_vec(path: &Path) -> Result<Vec<FileInfo>, Box<dyn error::Error
                 .filter_map(|f| f.ok())
                 .map(|f| {
                     let datetime: DateTime<Local> = f.metadata()?.modified()?.into();
+                    let path = PathBuf::from(path);
                     FileInfo::new(
                         f.file_type()?.is_dir(),
                         f.file_name().to_str().unwrap().to_string(),
+                        path.join(f.file_name()),
                         f.metadata()?.len(),
                         datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
                         format_permissions(f.metadata()?.permissions(), f.file_type()?.is_dir()),
